@@ -3,12 +3,168 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Style Transfer App</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Neural Style Transfer Application</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: #1a1a2e; /* Dark Blue Background */
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Main Container */
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        input[type="file"]:hover {
+            border-color: #e74c3c;
+        }
+
+        input[type="file"]::file-selector-button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        input[type="file"]::file-selector-button:hover {
+            background: #c0392b;
+        }
+
+        /* Button Styling */
+        button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+            position: relative;
+        }
+
+        button:disabled {
+            background: #7f8c8d;
+            cursor: not-allowed;
+        }
+
+        button:hover:not(:disabled) {
+            background: #c0392b;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: none;
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Result Section */
+        .result-section {
+            margin-top: 20px;
+        }
+
+        .image-container {
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+        }
+
+        #stylizedImage {
+            width: 100%;
+            border-radius: 8px;
+            display: none;
+        }
+
+        /* Message Styling */
+        #message {
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .success {
+            color: #2ecc71;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+
+        .processing {
+            color: #f1c40f;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h1>Style Transfer Application</h1>
+        <h1>Neural Style Transfer Application</h1> <!-- Updated Title -->
         <form id="styleTransferForm">
             <div class="upload-section">
                 <label for="contentImage">Upload Content Image:</label>
@@ -18,16 +174,75 @@
                 <label for="styleImage">Upload Style Image:</label>
                 <input type="file" id="styleImage" name="style_image" accept="image/*" required>
             </div>
-            <button type="submit">Apply Style Transfer</button>
+            <button type="submit" id="submitButton">
+                <span id="buttonText">Apply Neural Style Transfer</span> <!-- Updated Button Text -->
+                <span class="spinner" id="loadingSpinner"></span>
+            </button>
         </form>
 
         <div class="result-section">
             <h2>Result:</h2>
-            <img id="stylizedImage" src="" alt="Stylized Image" style="display:none;">
+            <div class="image-container">
+                <img id="stylizedImage" src="" alt="Stylized Image">
+            </div>
             <p id="message"></p>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        document.getElementById("styleTransferForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const contentImage = document.getElementById("contentImage").files[0];
+            const styleImage = document.getElementById("styleImage").files[0];
+            const messageElement = document.getElementById("message");
+            const imageElement = document.getElementById("stylizedImage");
+            const submitButton = document.getElementById("submitButton");
+            const buttonText = document.getElementById("buttonText");
+            const loadingSpinner = document.getElementById("loadingSpinner");
+
+            if (!contentImage || !styleImage) {
+                alert("Please upload both content and style images!");
+                return;
+            }
+
+            // Disable button and show loading spinner
+            submitButton.disabled = true;
+            buttonText.textContent = "Processing...";
+            loadingSpinner.style.display = "inline-block";
+            messageElement.textContent = "Processing your images...";
+            messageElement.className = "processing";
+
+            const formData = new FormData();
+            formData.append("content_image", contentImage);
+            formData.append("style_image", styleImage);
+
+            try {
+                const response = await fetch("http://localhost:5000/style-transfer", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error("Neural style transfer failed!");
+                }
+
+                const result = await response.json();
+                imageElement.src = result.image_url;
+                imageElement.style.display = "block";
+                messageElement.textContent = "Neural Style Transfer Successful!";
+                messageElement.className = "success";
+            } catch (error) {
+                console.error(error);
+                messageElement.textContent = "An error occurred. Please try again.";
+                messageElement.className = "error";
+            } finally {
+                // Re-enable button and hide spinner
+                submitButton.disabled = false;
+                buttonText.textContent = "Apply Neural Style Transfer";
+                loadingSpinner.style.display = "none";
+            }
+        });
+    </script>
 </body>
 </html>

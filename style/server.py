@@ -1,5 +1,7 @@
 import os
 import cv2
+print(cv2.__version__)
+
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub

@@ -9,6 +9,15 @@ document.getElementById("styleTransferForm").addEventListener("submit", async (e
         return;
     }
 
+    // Show loading spinner and disable button
+    const submitButton = document.getElementById("submitButton");
+    const buttonText = document.getElementById("buttonText");
+    const loadingSpinner = document.getElementById("loadingSpinner");
+
+    submitButton.disabled = true;
+    buttonText.textContent = "Processing...";
+    loadingSpinner.style.display = "inline-block";
+
     const formData = new FormData();
     formData.append("content_image", contentImage);
     formData.append("style_image", styleImage);
@@ -30,5 +39,10 @@ document.getElementById("styleTransferForm").addEventListener("submit", async (e
     } catch (error) {
         console.error(error);
         alert("An error occurred. Please try again.");
+    } finally {
+        // Reset button and spinner
+        submitButton.disabled = false;
+        buttonText.textContent = "Apply Style Transfer";
+        loadingSpinner.style.display = "none";
     }
 });
