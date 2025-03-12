@@ -79,5 +79,7 @@ def serve_output(filename):
     return send_from_directory(app.config["OUTPUT_FOLDER"], filename)
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))  # Render provides a dynamic port
-    app.run(host="0.0.0.0", port=port, debug=True)
+    port = int(os.environ.get("PORT", 10000))  # Render assigns a dynamic port
+    from waitress import serve
+    serve(app, host="0.0.0.0", port=port)
+
