@@ -78,7 +78,6 @@ def style_transfer():
 def serve_output(filename):
     return send_from_directory(app.config["OUTPUT_FOLDER"], filename)
 
-# ✅ Run Flask Server
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Default to 5000 if PORT is not set
+    port = int(os.environ.get("PORT", 10000))  # Render provides a dynamic port
     app.run(host="0.0.0.0", port=port, debug=True)
