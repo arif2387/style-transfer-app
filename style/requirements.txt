@@ -1,5 +1,6 @@
 flask
 tensorflow
+tensorflow_hub
 torch
 torchvision
 numpy
